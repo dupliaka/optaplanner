@@ -45,7 +45,7 @@ pipeline {
         booleanParam(name: 'RELEASE', defaultValue: false, description: 'Is this build for a release?')
         string(name: 'PROJECT_VERSION', defaultValue: '', description: 'Optional if not RELEASE. If RELEASE, cannot be empty.')
         string(name: 'KOGITO_VERSION', defaultValue: '', description: 'Optional if not RELEASE. If RELEASE, cannot be empty.')
-        
+
         // Nexus staging default parameters
         string(name: 'NEXUS_RELEASE_URL', defaultValue: 'https://repository.jboss.org/nexus', description: 'Nexus URL for release staging')
         string(name: 'NEXUS_RELEASE_REPOSITORY_ID', defaultValue: 'jboss-releases-repository', description: 'Nexus Release repository ID for staging')
@@ -113,6 +113,7 @@ pipeline {
                 prepareForPR(optaplannerRepository)
                 prepareForPR(vehicleRoutingRepository)
                 prepareForPR(employeeRosteringRepository)
+                prepareForPR(quickstartsRepository)
             }
         }
 
@@ -129,6 +130,7 @@ pipeline {
 
                     maven.mvnVersionsUpdateParentAndChildModules(getOptawebVehicleRoutingMavenCommand(), getProjectVersion())
                     maven.mvnVersionsUpdateParentAndChildModules(getOptawebEmployeeRosteringMavenCommand(), getProjectVersion())
+                    updateQuickstartsVersions()
                 }
             }
         }
@@ -243,6 +245,44 @@ pipeline {
     }
 }
 
+void updateQuickstartsVersions(){
+    maven.mvnVersionsUpdateParentAndChildModules(getOptaplannerQuickstartsMavenCommand(), getProjectVersion())
+    gradleVersionsUpdate(quickstartsRepository,getProjectVersion())
+    assert grepBuilders(repo, "repository.jboss.org", ['0.1.0-SNAPSHOT', '>1.0-SNAPSHOT'])==''
+    removeJbossNexusFromMavenAndGradle(quickstartsRepository)
+    assert grepBuilders(repo, "repository.jboss.org")==''
+    githubscm.commitChanges("Bump version to ${getProjectVersion()}")
+}
+
+void removeJbossNexusFromMavenAndGradle(String repo) {
+    dir(repo){
+        sh 'sed -i \':a;N;$!ba;s/\\n *<repositories>.*<\\/repositories>//g\' */pom.xml'
+        sh 'sed -i \':a;N;$!ba;s/\\n *<repositories>.*<\\/repositories>//g\' pom.xml'
+        sh 'sed -i \':a;N;$!ba;s/\\n *\\/\\/ To get snapshots during development[^{}]*maven {[^{}]*mavenContent {[^{}]*snapshotsOnly[^{}]*}[^{}]*}//g\' */build.gradle'
+    }
+}
+
+String grepBuilders(String repo, String target, String[] exceptions=""){
+    String grepCommand="grep -Rn '${target}' --include={pom.xml,build.gradle}";
+
+    if (exceptions) {
+        grepCommand += " | grep -v "
+
+        for (String except : exceptions) {
+            grepCommand += "-e '${except}'"
+        }
+    }
+    dir(repo){
+        snaphots = sh "${grepCommand}"
+    }
+}
+
+void gradleVersionsUpdate(String repo,String newVersion){
+    dir(repo) {
+        sh 'sed -i -E "s/def optaplannerVersion = \"[^\"\\s]+\"/def optaplannerVersion = \"${newVersion}\"/" */build.gradle'
+    }
+}
+
 void saveReports(boolean allowEmpty=false){
     junit testResults: '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml', allowEmptyResults: allowEmpty
 }
@@ -328,7 +368,7 @@ void deployMavenArtifacts(MavenCommand mvnCmd, String localDeployId){
 
 void runMavenDeploy(MavenCommand mvnCmd) {
     mvnCmd= mvnCmd.clone()
-    
+
     if(params.MAVEN_DEPLOY_REPOSITORY) {
         mvnCmd.withDeployRepository(params.MAVEN_DEPLOY_REPOSITORY)
     }
