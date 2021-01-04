@@ -134,7 +134,7 @@ pipeline {
                 }
             }
         }
-
+/*
         stage('Build OptaPlanner') {
             steps {
                 script {
@@ -242,6 +242,7 @@ pipeline {
             }
             cleanWs()
         }
+*/
     }
 }
 
