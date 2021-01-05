@@ -141,7 +141,7 @@ pipeline {
 }
 
 void updateQuickstartsVersions(){
-    maven.mvnVersionsSet(getOptaplannerQuickstartsMavenCommand(), getProjectVersion())
+    maven.mvnSetVersionProperty(getOptaplannerQuickstartsMavenCommand(),"version.org.optaplanner",getProjectVersion())
     maven.mvnVersionsUpdateParentAndChildModules(getOptaplannerQuickstartsMavenCommand(), getProjectVersion())
     gradleVersionsUpdate(quickstartsRepository,getProjectVersion())
     removeJbossNexusFromMavenAndGradle(quickstartsRepository)
@@ -151,8 +151,6 @@ void updateQuickstartsVersions(){
         String repositories = sh 'grep -Rn "repository.jboss.org" --include={pom.xml,build.gradle}'
         assert !repositories
     }
-    //TODO: remove
-    githubscm.commitChanges("Bump version to ${getProjectVersion()}")
 }
 
 void removeJbossNexusFromMavenAndGradle(String repo) {
