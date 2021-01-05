@@ -145,11 +145,13 @@ void updateQuickstartsVersions(){
     maven.mvnVersionsUpdateParentAndChildModules(getOptaplannerQuickstartsMavenCommand(), getProjectVersion())
     gradleVersionsUpdate(quickstartsRepository,getProjectVersion())
     removeJbossNexusFromMavenAndGradle(quickstartsRepository)
+
     dir(quickstartsRepository) {
-        String snapshots = sh 'grep -Rn "SNAPSHOT" --include={pom.xml,build.gradle}| grep -v -e "0.1.0-SNAPSHOT" -e ">1.0-SNAPSHOT"'
+        def snapshots = sh (script: 'grep -Rn "SNAPSHOT" --include={pom.xml,build.gradle}| grep -v -e "0.1.0-SNAPSHOT" -e ">1.0-SNAPSHOT"|cat'
+                , allowEmptyResults: true, returnStdout: true)
         assert !snapshots
-        String repositories = sh 'grep -Rn "repository.jboss.org" --include={pom.xml,build.gradle}'
-        assert !repositories
+        assert !sh (script: 'grep -Rnq "repository.jboss.org" --include={pom.xml,build.gradle}|cat'
+                , allowEmptyResults: true, returnStdout: true)
     }
 }
 
