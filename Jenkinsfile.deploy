@@ -173,7 +173,7 @@ String grepBuilders(String repo, String target, String[] exceptions=""){
 
 void gradleVersionsUpdate(String repo, String newVersion){
     dir(repo) {
-        sh 'sed -i -E "s/def optaplannerVersion = \"[^\"\\s]+\"/def optaplannerVersion = \"${newVersion}\"/" */build.gradle'
+        sh 'sed -i -E "s/def optaplannerVersion = \"[^\"\\s]+\"/def optaplannerVersion = \"'${newVersion}'\"/" */build.gradle'
     }
 }
 
