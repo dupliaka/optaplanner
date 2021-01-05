@@ -142,7 +142,7 @@ pipeline {
 void updateQuickstartsVersions(){
     maven.mvnVersionsUpdateParentAndChildModules(getOptaplannerQuickstartsMavenCommand(), getProjectVersion())
     gradleVersionsUpdate(quickstartsRepository,getProjectVersion())
-    assert grepBuilders(quickstartsRepository, "repository.jboss.org", ['0.1.0-SNAPSHOT', '>1.0-SNAPSHOT'])==''
+    assert grepBuilders(quickstartsRepository, "SNAPSHOT", ['0.1.0-SNAPSHOT', '>1.0-SNAPSHOT'])==''
     removeJbossNexusFromMavenAndGradle(quickstartsRepository)
     assert grepBuilders(quickstartsRepository, "repository.jboss.org")==''
     githubscm.commitChanges("Bump version to ${getProjectVersion()}")
@@ -155,20 +155,22 @@ void removeJbossNexusFromMavenAndGradle(String repo) {
         sh 'sed -i \':a;N;$!ba;s/\\n *\\/\\/ To get snapshots during development[^{}]*maven {[^{}]*mavenContent {[^{}]*snapshotsOnly[^{}]*}[^{}]*}//g\' */build.gradle'
     }
 }
+String grepBuilders(String repo, String target, List<String> exceptions = null){
+    def grepCommand="grep -Rn ${target} --include={pom.xml,build.gradle}"
 
-String grepBuilders(String repo, String target, String[] exceptions=""){
-    String grepCommand="grep -Rn '${target}' --include={pom.xml,build.gradle}";
-
-    if (exceptions) {
+    def unexpectedBuilders = ""
+    if (exceptions.size() != 0) {
         grepCommand += " | grep -v "
 
         for (String except : exceptions) {
-            grepCommand += "-e '${except}'"
+            grepCommand += "-e ${except}"
         }
     }
+
     dir(repo){
-        snaphots = sh "${grepCommand}"
+        unexpectedBuilders = sh "${grepCommand}"
     }
+    return unexpectedBuilders
 }
 
 void gradleVersionsUpdate(String repo, String newVersion){
@@ -336,3 +338,4 @@ void setDeployPropertyIfNeeded(String key, def value) {
 String getQuickStartsBranch(String quickStartsBranch = 'development'){
     return quickStartsBranch
 }
+
