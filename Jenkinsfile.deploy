@@ -142,7 +142,7 @@ pipeline {
 void updateQuickstartsVersions(){
     maven.mvnVersionsUpdateParentAndChildModules(getOptaplannerQuickstartsMavenCommand(), getProjectVersion())
     gradleVersionsUpdate(quickstartsRepository,getProjectVersion())
-    assert grepBuilders(quickstartsRepository, "SNAPSHOT", ['0.1.0-SNAPSHOT', '>1.0-SNAPSHOT'])==''
+    assert grepBuilders(quickstartsRepository, "SNAPSHOT", ['0.1.0-SNAPSHOT','>1.0-SNAPSHOT'])==''
     removeJbossNexusFromMavenAndGradle(quickstartsRepository)
     assert grepBuilders(quickstartsRepository, "repository.jboss.org")==''
     githubscm.commitChanges("Bump version to ${getProjectVersion()}")
@@ -160,10 +160,10 @@ String grepBuilders(String repo, String target, List<String> exceptions = null){
 
     def unexpectedBuilders = ""
     if (exceptions.size() != 0) {
-        grepCommand += " | grep -v "
+        grepCommand += " | grep -v"
 
         for (String except : exceptions) {
-            grepCommand += "-e ${except}"
+            grepCommand += " -e ${except}"
         }
     }
 
