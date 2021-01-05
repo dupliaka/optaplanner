@@ -142,9 +142,9 @@ pipeline {
 void updateQuickstartsVersions(){
     maven.mvnVersionsUpdateParentAndChildModules(getOptaplannerQuickstartsMavenCommand(), getProjectVersion())
     gradleVersionsUpdate(quickstartsRepository,getProjectVersion())
-    assert grepBuilders(repo, "repository.jboss.org", ['0.1.0-SNAPSHOT', '>1.0-SNAPSHOT'])==''
+    assert grepBuilders(quickstartsRepository, "repository.jboss.org", ['0.1.0-SNAPSHOT', '>1.0-SNAPSHOT'])==''
     removeJbossNexusFromMavenAndGradle(quickstartsRepository)
-    assert grepBuilders(repo, "repository.jboss.org")==''
+    assert grepBuilders(quickstartsRepository, "repository.jboss.org")==''
     githubscm.commitChanges("Bump version to ${getProjectVersion()}")
 }
 
