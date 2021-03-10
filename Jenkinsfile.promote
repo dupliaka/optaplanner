@@ -33,6 +33,7 @@ pipeline {
     environment {
         // Some generated env is also defined into .jenkins/dsl/jobs.groovy file
 
+        GITHUB_CLI_VERSION="0.11.1"
         BOT_BRANCH_HASH = "${util.generateHash(10)}"
     }
 
